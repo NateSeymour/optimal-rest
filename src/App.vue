@@ -1,6 +1,6 @@
 <template>
   <header>
-    <n-page-header title="Rest Optimizer" subtitle="By Nathan Seymour" @back="() => router.push('/')">
+    <n-page-header title="Optimal Rest" subtitle="By Nathan Seymour" @back="() => router.push('/')">
       <template #back>
         <n-icon v-if="canGoBack">
           <ArrowLeft />
