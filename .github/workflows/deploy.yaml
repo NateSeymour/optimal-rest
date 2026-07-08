@@ -1,0 +1,21 @@
+name: Deploy
+on: [push]
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: us-east-1
+
+      - run: pnpm ci
+
+      - run: pnpm run build
+
+      - run: aws s3 sync ./dist s3://rest.seymour.global-static
