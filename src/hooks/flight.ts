@@ -4,6 +4,7 @@ import tc, { Duration } from 'timezonecomplete';
 import airports from '../data/airports.json';
 
 export interface Flight {
+  id: string;
   day: number,
   departure: string,
   origin: string, 
@@ -111,6 +112,10 @@ export const resolveFlight = (flight: Flight): ResolvedFlight => {
     heading: calculateHeading(origin, destination),
     flightTime: calculateFlightTime(origin, destination),
   };
+};
+
+export const useResolvedFlights = (flights: Ref<Flight[]>) => {
+  return computed(() => flights.value.map(resolveFlight));
 };
 
 export const useFlight = (originCode: Ref<string>, destinationCode: Ref<string>) => {

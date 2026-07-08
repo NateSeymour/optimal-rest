@@ -65,7 +65,7 @@
     <div v-if="origin && destination" class="controls">
       <n-button 
         class="add-return-flight"
-        @click="() => emit('add-return-flight', { day: day + 1, departure, origin: destination!.iata, destination: origin!.iata })"
+        @click="() => emit('add-return-flight', { id: uuid(), day: day + 1, departure, origin: destination!.iata, destination: origin!.iata })"
       >
         Add Return Flight
       </n-button>
@@ -76,6 +76,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { getAirport, useAirportAutocomplete, useFlight } from '../hooks/flight';
+import { v4 as uuid } from 'uuid';
 import type { FormRules, SelectOption } from 'naive-ui';
 import { PlaneDeparture } from '@vicons/fa';
 

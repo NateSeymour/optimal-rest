@@ -2,20 +2,20 @@
   <div class="home">
     <n-form class="form" :rules="rules">
       <n-form-item path="sequence" label="Sequence Number">
-        <n-input-number class="sequence-number" :show-button="false" placeholder="123" v-model:value="form.sequence" />
+        <n-input-number class="sequence-number" :show-button="false" placeholder="123" v-model:value="sequence" />
       </n-form-item>
 
-      <n-form-item class="flight-item" v-for="(flight, index) in form.flights" :key="index" :show-feedback="false">
+      <n-form-item class="flight-item" v-for="(flight, index) in sortedFlights" :key="flight.id" :show-feedback="false">
         <n-card class="flight-card" :title="`Day ${flight.day} - Flight ${index + 1}`">
           <template #header-extra>
             <n-button size="small" type="secondary" @click="() => removeFlight(index)">X</n-button>
           </template>
 
           <flight-picker 
-            v-model:day="form.flights[index].day"
-            v-model:departure="form.flights[index].departure"
-            v-model:originCode="form.flights[index].origin"
-            v-model:destinationCode="form.flights[index].destination"
+            v-model:day="flights[index].day"
+            v-model:departure="flights[index].departure"
+            v-model:originCode="flights[index].origin"
+            v-model:destinationCode="flights[index].destination"
 
             @add-return-flight="addFlight"
           />
@@ -29,19 +29,21 @@
       <n-divider />
 
       <div class="actions">
-        <n-button class="calculate-rest" type="primary" @click="() => router.push(`/sequence/${form.sequence}`)">Calculate Rest</n-button>
+        <n-button class="calculate-rest" type="primary" @click="() => router.push(`/sequence/${sequence}`)">Calculate Rest</n-button>
       </div>
     </n-form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { v4 as uuid } from 'uuid';
 import FlightPicker from '../components/FlightPicker.vue';
 import tc from 'timezonecomplete';
 import type { FormRules } from 'naive-ui';
 import type { Flight } from '../hooks/flight.ts';
+import { useLocalStorage } from "@vueuse/core";
 
 const router = useRouter();
 
@@ -53,28 +55,22 @@ const rules : FormRules = {
   ],
 };
 
-const form = reactive({
-  sequence: 0,
-  flights: [] as Flight[],
-});
+const sequence = ref(0);
+const flightKey = computed(() => `sequence-${sequence.value}`);
+const flights = useLocalStorage(flightKey, [] as Flight[]);
 
-function sortFlights() {
-  form.flights.sort((a, b) => {
+const sortedFlights = computed(() => {
+  return flights.value.sort((a, b) => {
     const daySort = a.day - b.day;
 
-    return daySort || new tc.DateTime(a.departure).unixUtcMillis() - new tc.DateTime(b.departure).unixUtcMillis();
+    return daySort || new tc.Duration(a.departure).milliseconds() - new tc.Duration(b.departure).milliseconds();
   });
-}
-
-watch(form.flights, () => {
-  sortFlights();
-
-  localStorage.setItem(`rest-sequence-${form.sequence}`, JSON.stringify(form, null, 4));
 });
 
 function addFlight(flight?: Flight) {  
-  form.flights.push(flight || {
-    day: form.flights.reduce((acc, current) => Math.max(acc, current.day), 1),
+  flights.value.push(flight || {
+    id: uuid(),
+    day: flights.value.reduce((acc, current) => Math.max(acc, current.day), 1),
     departure: '12:00',
     origin: '',
     destination: '',
@@ -82,11 +78,13 @@ function addFlight(flight?: Flight) {
 }
 
 function removeFlight(i: number) {
-  form.flights.splice(i, 1);
+  flights.value.splice(i, 1);
 }
 
 onMounted(() => {
-  addFlight();
+  if(flights.value.length < 1) {
+    addFlight();
+  }
 });
 </script>
 
