@@ -10,8 +10,10 @@
         </n-statistic>
         <n-statistic label="Flight Time" :value="totalFlightTime.toHmsString(false)" />
 
-        <n-statistic label="Unscheduled Time" :value="unscheduledTime.toHmsString(false)" />
-        <n-statistic label="Scheduled Time" :value="scheduledTime.toHmsString(false)" />
+        <n-statistic label="Unscheduled Time" :value="schedule.unscheduledTime.toHmsString(false)" />
+        <n-statistic label="Scheduled Time" :value="schedule.scheduledTime.toHmsString(false)" />
+
+        <n-statistic label="Scheduled Sleep" :value="schedule.scheduledSleep.toHmsString(false)" />
       </div>
     </n-card>
 
@@ -54,7 +56,7 @@
 
       <n-timeline>
         <n-timeline-item 
-          v-for="(event, index) in schedule"
+          v-for="(event, index) in schedule.events"
           :key="index"
           :content="event.content"
           :time="event.time"
@@ -89,10 +91,10 @@ const { totalDays, totalDistance, totalFlightTime } = useSequenceStats(resolvedF
 
 // Options
 const sequenceStartDate = ref(new tc.DateTime().format('yyyy-MM-dd'));
-const dayOneWakeUp = ref(new tc.DateTime().format('HH:mm'));
+const dayOneWakeUp = ref("08:00");
 
 // Rest Schedule
-const { schedule, scheduledTime, unscheduledTime } = useOptimizedRestSchedule(resolvedFlights, {
+const schedule = useOptimizedRestSchedule(resolvedFlights, {
   start: sequenceStartDate,
   wake: dayOneWakeUp,
 });

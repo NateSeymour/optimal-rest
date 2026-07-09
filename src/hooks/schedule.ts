@@ -1,18 +1,19 @@
-import type { Ref } from "vue";
+import {computed, type Ref} from "vue";
 import tc, {DateTime, type Duration} from 'timezonecomplete';
 import type {ResolvedFlight} from "./flight.ts";
 
 export interface OptimizedRestScheduleOptions {
   start: Ref<string>,
   wake: Ref<string>,
-};
+}
 
 class Event {
   title: string;
   start: DateTime;
+  end: DateTime;
   duration: Duration;
 
-  constructor(opts: { title: string, duration: Duration, start?: DateTime, before?: Event, after?: Event, tz?: string }) {
+  constructor(opts: { title: string, duration: Duration, start?: DateTime, before?: Event, after?: Event, tz?: string, endTz?: string }) {
     this.title = opts.title;
     this.duration = opts.duration;
 
@@ -23,7 +24,7 @@ class Event {
       this.start = opts.before.start.sub(opts.duration);
     }
     else if(opts.after) {
-      this.start = opts.after.start.add(opts.after.duration);
+      this.start = opts.after.end;
     } else {
       throw new Error('Must provided an orientation for the event!');
     }
@@ -31,68 +32,130 @@ class Event {
     if(opts.tz) {
       this.start = this.start.convert(tc.zone(opts.tz));
     }
-  }
-};
 
-const timeFormat = 'MM/dd HH:mm OOOO';
+    this.end = this.start.add(this.duration);
+
+    if(opts.endTz) {
+      this.end = this.end.convert(tc.zone(opts.endTz));
+    }
+  }
+}
+
+interface Layover {
+  location: string,
+  startsAfter?: Event,
+  endsBefore?: Event,
+}
 
 export const useOptimizedRestSchedule = (flights: Ref<ResolvedFlight[]>, opts: OptimizedRestScheduleOptions) => {
-  const totalDays = flights.value.reduce((acc, current) => Math.max(acc, current.day), 0);
+  return computed(() => {
+    const events: Event[] = [];
+    const sequenceStartDate = new tc.DateTime(opts.start.value, tc.zone(flights.value[0].origin.tz));
 
-  const events: Event[] = [];
-  const sequenceStartDate = new tc.DateTime(opts.start.value, tc.zone(flights.value[0].origin.tz));
+    const firstDay = flights.value.reduce((acc, current) => Math.min(acc, current.day), 100);
+    const lastDay = flights.value.reduce((acc, current) => Math.max(acc, current.day), 0);
 
-  for(const flight of flights.value) {
-    const departureDay = sequenceStartDate.add(tc.days(flight.day));
-    const departureTime = departureDay.add(new tc.Duration(flight.departure));
+    const days = Object.groupBy(flights.value, ({day}) => day);
+    const layovers: Layover[] = [];
 
-    const departure = new Event({
-      title: `Departure to ${flight.destination.mun}`,
-      start: departureTime,
-      duration: flight.flightTime,
-    });
+    for(const [y, flights] of Object.values(days).entries()) {
+      const day = parseInt(Object.keys(days)[y]);
 
-    const signIn = new Event({
-      title: `Sign in for flight to ${flight.destination.mun}`,
-      before: departure,
-      duration: new tc.Duration("01:15"),
-    });
+      if(day === firstDay) {
+        events.push(new Event({
+          title: 'Sleep',
+          start: sequenceStartDate,
+          duration: new tc.Duration(opts.wake.value),
+        }));
+      }
 
-    const transportation = new Event({
-      title: `Leave for ${flight.origin.iata}`,
-      before: signIn,
-      duration: new tc.Duration("01:15"),
-    });
+      for(const [i, flight] of flights!.entries()) {
+        const dayStart = new tc.DateTime(opts.start.value, tc.zone(flight.origin.tz));
+        const departureDay = dayStart.add(tc.days(flight.day - 1));
+        const departureTime = departureDay.add(new tc.Duration(flight.departure));
 
-    const prepare = new Event({
-      title: `Prepare for flight to ${flight.destination.mun}`,
-      before: transportation,
-      duration: tc.hours(1),
-    });
+        const isFirstFlightOfDay = i === 0;
+        const isLastFlightOfDay = i === flights!.length - 1;
 
-    const arrival = new Event({
-      title: `Arrival in ${flight.destination.mun}`,
-      after: departure,
-      duration: tc.hours(1),
-      tz: flight.destination.tz,
-    });
+        const flightEvent = new Event({
+          title: `Flight to ${flight.destination.mun}`,
+          start: departureTime,
+          duration: flight.flightTime,
+          tz: flight.origin.tz,
+          endTz: flight.destination.tz,
+        });
 
-    events.push(prepare, transportation, signIn, departure, arrival);
-  }
+        const preDeparture = new Event({
+          title: `Pre-Departure`,
+          before: flightEvent,
+          duration: new tc.Duration("01:15"),
+        });
 
-  events.sort((a, b) => a.start.unixUtcMillis() - b.start.unixUtcMillis());
+        events.push(preDeparture, flightEvent);
 
-  const schedule = events.map((event) => ({
-    content: event.title,
-    time: event.start.format(timeFormat),
-  }));
+        if(isFirstFlightOfDay) {
+          const transportation = new Event({
+            title: `Transportation to ${flight.origin.iata}`,
+            before: preDeparture,
+            duration: new tc.Duration("01:15"),
+          });
 
-  const scheduledTime = events.reduce((acc, current) => acc.add(current.duration), tc.hours(0));
-  const unscheduledTime = tc.days(totalDays).sub(scheduledTime);
+          const prepare = new Event({
+            title: `Preparation for Duty`,
+            before: transportation,
+            duration: tc.hours(1),
+          });
 
-  return {
-    schedule,
-    scheduledTime,
-    unscheduledTime,
-  };
+          if(layovers.length > 0) {
+            layovers[layovers.length - 1].endsBefore = prepare;
+          }
+
+          events.push(transportation, prepare);
+        }
+
+        if(isLastFlightOfDay) {
+          const debrief = new Event({
+            title: `Debrief`,
+            after: flightEvent,
+            duration: tc.hours(1),
+          });
+
+          layovers.push({ location: flight.destination.mun, startsAfter: debrief });
+
+          events.push(debrief);
+        }
+      }
+    }
+
+    for(const {location, startsAfter, endsBefore} of layovers) {
+      if(startsAfter && endsBefore) {
+        events.push(new Event({
+          title: `Layover in ${location}`,
+          after: startsAfter,
+          duration: endsBefore.start.diff(startsAfter.end),
+        }));
+      }
+    }
+
+    events.sort((a, b) => a.start.unixUtcMillis() - b.start.unixUtcMillis());
+
+    const timeFormat = 'HH:mm';
+    const timelineEvents = events.map((event) => ({
+      content: event.title,
+      time: `${event.start.format(timeFormat)} - ${event.end.format(timeFormat)}`,
+    }));
+
+    const scheduledTime = events.reduce((acc, current) => acc.add(current.duration), tc.hours(0));
+    const unscheduledTime = tc.days(lastDay).sub(scheduledTime);
+    const scheduledSleep = events
+      .filter(({title}) => title === 'Sleep')
+      .reduce((acc, current) => acc.add(current.duration), tc.hours(0));
+
+    return {
+      events: timelineEvents,
+      scheduledTime,
+      unscheduledTime,
+      scheduledSleep,
+    };
+  });
 };
