@@ -8,7 +8,7 @@
       <n-form-item class="flight-item" v-for="(flight, index) in sortedFlights" :key="flight.id" :show-feedback="false">
         <n-card class="flight-card" :title="`Day ${flight.day} - Flight ${index + 1}`">
           <template #header-extra>
-            <n-button size="small" type="secondary" @click="() => removeFlight(index)">X</n-button>
+            <n-button size="small" @click="() => removeFlight(index)">X</n-button>
           </template>
 
           <flight-picker 
@@ -67,11 +67,13 @@ const sortedFlights = computed(() => {
   });
 });
 
-function addFlight(flight?: Flight) {  
+function addFlight(flight?: Flight) {
+  const lastFlight = sortedFlights.value[sortedFlights.value.length - 1];
+
   flights.value.push(flight || {
     id: uuid(),
     day: flights.value.reduce((acc, current) => Math.max(acc, current.day), 1),
-    departure: '12:00',
+    departure: lastFlight.departure || '12:00',
     origin: '',
     destination: '',
   });
