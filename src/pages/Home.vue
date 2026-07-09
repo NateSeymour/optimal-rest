@@ -73,7 +73,7 @@ function addFlight(flight?: Flight) {
   flights.value.push(flight || {
     id: uuid(),
     day: flights.value.reduce((acc, current) => Math.max(acc, current.day), 1),
-    departure: lastFlight.departure || '12:00',
+    departure: lastFlight?.departure || '12:00',
     origin: '',
     destination: '',
   });
@@ -82,12 +82,6 @@ function addFlight(flight?: Flight) {
 function removeFlight(i: number) {
   flights.value.splice(i, 1);
 }
-
-onMounted(() => {
-  if(flights.value.length < 1) {
-    addFlight();
-  }
-});
 </script>
 
 <style lang="scss" scoped>
