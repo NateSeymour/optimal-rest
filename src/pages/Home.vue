@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { v4 as uuid } from 'uuid';
 import FlightPicker from '../components/FlightPicker.vue';
