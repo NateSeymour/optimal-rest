@@ -67,37 +67,6 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import tc from 'timezonecomplete';
-import {useSequenceStats, useResolvedFlights} from '../hooks/flight';
-import { InfoCircle } from '@vicons/fa';
-import {useLocalStorage} from "@vueuse/core";
-import {useOptimizedRestSchedule} from "../hooks/schedule.ts";
-
-const router = useRouter();
-const route = useRoute();
-
-const flightKey = computed(() => `sequence-${route.params.sequence}`);
-const flights = useLocalStorage(flightKey, []);
-const resolvedFlights = useResolvedFlights(flights);
-watch(flights, (newFlights) => {
-  if(newFlights.length === 0) {
-    router.push('/');
-  }
-}, { immediate: true });
-
-const { totalDays, totalDistance, totalFlightTime } = useSequenceStats(resolvedFlights);
-
-// Options
-const sequenceStartDate = ref(new tc.DateTime().format('yyyy-MM-dd'));
-const dayOneWakeUp = ref("08:00");
-
-// Rest Schedule
-const schedule = useOptimizedRestSchedule(resolvedFlights, {
-  start: sequenceStartDate,
-  wake: dayOneWakeUp,
-});
 </script>
 
 <style lang="scss" scoped>

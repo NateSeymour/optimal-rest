@@ -8,10 +8,7 @@
           </template>
 
           <flight-picker 
-            v-model:day="flights[index].day"
-            v-model:departure="flights[index].departure"
-            v-model:originCode="flights[index].origin"
-            v-model:destinationCode="flights[index].destination"
+            v-model:value="flights[index].data as Flight"
 
             @add-return-flight="addFlight"
           />
@@ -32,15 +29,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import {useRoute, useRouter} from 'vue-router';
-import { v4 as uuid } from 'uuid';
 import FlightPicker from '../components/FlightPicker.vue';
-import tc from 'timezonecomplete';
 import type { FormRules } from 'naive-ui';
-import type { Flight } from '../hooks/flight.ts';
+import { Flight } from '../hooks/flight.ts';
 import { useLocalStorage } from "@vueuse/core";
 import {Event, Schedule} from "../hooks/schedule.ts";
+import {watch} from "vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -53,18 +48,25 @@ const rules : FormRules = {
   ],
 };
 
-const sequence = useLocalStorage(`sequence-${route.params.sequence}`, new Schedule());
-const flights = computed(() => {
-  return sequence.value.filterByProperty('type', 'flight');
+const sequence = useLocalStorage(`sequence-${route.params.sequence}`, {
+  number: route.params.sequence,
+  date: '01/01/2001',
+  schedule: new Schedule(),
 });
 
 function addFlight(flight?: Flight) {
-  sequence.value.add(new Event('Flight').with({ type: 'flight' }));
+  sequence.value.schedule.add(new Event({ data: flight || new Flight() }));
 }
 
 function removeFlight(i: number) {
   flights.value.splice(i, 1);
 }
+
+watch(sequence, (newSequence) => {
+  if(newSequence && newSequence.schedule.events.length === 0) {
+    addFlight();
+  }
+}, { immediate: true });
 </script>
 
 <style lang="scss" scoped>

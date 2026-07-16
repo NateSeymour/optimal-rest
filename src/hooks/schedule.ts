@@ -8,49 +8,50 @@ const never = () => {
   return DateTime.fromExcel(0, tc.zone('UTC'));
 };
 
-export class Event {
-  #id: string = uuid();
-  #title: string = 'My Event';
-  #start: DateTime = never();
-  #duration: Duration = tc.hours(0);
+export class SimpleEvent {
+  public static __type: string = 'Custom';
+}
 
-  get id() { return this.#id; }
-  get title() { return this.#title; }
-  get start() { return this.#start; }
-  get end() { return this.#start.add(this.#duration); }
-  get duration() { return this.#duration; }
+export class Event<T extends SimpleEvent = SimpleEvent> {
+  id: string = uuid();
+  start: DateTime = never();
+  duration: Duration = tc.hours(0);
+
+  get end() { return this.start.add(this.duration); }
 
   properties: Record<string, any> = {};
 
+  data: T;
+
   at(start: DateTime, duration: Duration = tc.hours(0)) {
-    this.#start = start;
-    this.#duration = duration;
+    this.start = start;
+    this.duration = duration;
 
     return this;
   }
 
-  after(event: Event, duration: Duration = tc.hours(0)) {
-    this.#start = event.end;
-    this.#duration = duration;
+  after(event: Event<any>, duration: Duration = tc.hours(0)) {
+    this.start = event.end;
+    this.duration = duration;
 
     return this;
   }
 
-  fill(first: Event, second: Event) {
-    this.#start = first.end;
-    this.#duration = first.end.diff(second.start);
+  fill(first: Event<any>, second: Event<any>) {
+    this.start = first.end;
+    this.duration = first.end.diff(second.start);
   }
 
-  before(event: Event, duration: Duration, gap: Duration = tc.hours(0)) {
-    this.#start = event.#start.sub(duration).sub(gap);
-    this.#duration = duration;
+  before(event: Event<any>, duration: Duration, gap: Duration = tc.hours(0)) {
+    this.start = event.start.sub(duration).sub(gap);
+    this.duration = duration;
 
     return this;
   }
 
   startNow(duration: Duration = tc.hours(0)) {
-    this.#start = DateTime.nowLocal();
-    this.#duration = duration;
+    this.start = DateTime.nowLocal();
+    this.duration = duration;
 
     return this;
   }
@@ -61,34 +62,26 @@ export class Event {
     return this;
   }
 
-  constructor(title: string) {
-    this.#title = title;
+  constructor(config: { data: T }) {
+    this.data = config.data;
   }
 }
 
 export class Schedule {
-  #events: Event[] = [];
+  private _events: Event[] = [];
 
-  get events(): Event[] { return this.#events; }
-  get start(): Maybe<Event> { return this.#events[0] || null; }
-  get end(): Maybe<Event> { return this.#events.at(-1) || null; }
+  get events(): Event[] { return this._events; }
+  get start(): Maybe<Event> { return this._events[0] || null; }
+  get end(): Maybe<Event> { return this._events.at(-1) || null; }
 
-  groupEventsByFunctor(functor: (item: Event, index: number) => PropertyKey) {
-    return Object.groupBy(this.#events, functor);
-  }
-
-  filterByProperty(property: string, value: any) {
-    return this.#events.filter((event) => event.properties[property] === value);
-  }
-
-  #sort() {
-    this.#events.sort((a, b) => a.start.unixUtcMillis() - b.start.unixUtcMillis());
+  sort() {
+    this._events.sort((a, b) => a.start.unixUtcMillis() - b.start.unixUtcMillis());
   }
 
   add(event: Event) {
-    this.#events.push(event);
+    this._events.push(event);
 
-    this.#sort();
+    this.sort();
 
     return event;
   }

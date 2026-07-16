@@ -2,14 +2,8 @@ import { computed, toValue, type ComputedRef, type Ref } from 'vue';
 import { distanceTo, headingTo, normalizeHeading } from 'geolocation-utils';
 import tc, { Duration } from 'timezonecomplete';
 import airports from '../data/airports.json';
-
-export interface Flight {
-  id: string;
-  day: number,
-  departure: string,
-  origin: string, 
-  destination: string, 
-};
+import type {SimpleEvent} from "./schedule.ts";
+import type {Maybe} from "../util/maybe.ts";
 
 export interface Airport {
   name: string,
@@ -19,17 +13,19 @@ export interface Airport {
   lon: number,
   mun: string,
   tz: string,
-};
+}
 
-export interface ResolvedFlight {
-  day: number,
-  departure: string,
-  origin: Airport,
-  destination: Airport,
-  distance: number,
-  heading: number,
-  flightTime: Duration,
-};
+export class Flight implements SimpleEvent {
+  public static __type = 'Flight';
+
+  period: number = 0;
+  departure: string = '12:00';
+  origin: Maybe<Airport> = null;
+  destination: Maybe<Airport> = null;
+  distance: number = 0;
+  heading: number = 0;
+  flightTime: Duration = tc.hours(0);
+}
 
 export const useAirportAutocomplete = (iata: Ref<string> | string) => {
   const input = toValue(iata).toUpperCase();
@@ -94,7 +90,7 @@ export const useFlightTime = (a: Ref<Airport | null>, b: Ref<Airport | null>): C
   return computed(() => calculateFlightTime(toValue(a), toValue(b)));
 };
 
-export const resolveFlight = (flight: Flight): ResolvedFlight => {
+export const resolveFlight = (flight: Flight): Flight => {
   const origin = getAirport(flight.origin);
   const destination = getAirport(flight.destination);
 
@@ -132,9 +128,9 @@ export const useFlight = (originCode: Ref<string>, destinationCode: Ref<string>)
   };
 };
 
-export const useSequenceStats = (flights: Ref<ResolvedFlight[]>) => {
+export const useSequenceStats = (flights: Ref<Flight[]>) => {
   const totalDays = computed(() => {
-    return flights.value.reduce((acc, current) => Math.max(acc, current.day), 1);
+    return flights.value.reduce((acc, current) => Math.max(acc, current.period), 1);
   });
 
   const totalDistance = computed(() => {
