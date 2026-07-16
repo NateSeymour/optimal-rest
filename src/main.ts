@@ -5,8 +5,9 @@ import tzdata from 'tzdata';
 import naive from 'naive-ui';
 
 import App from './App.vue';
-import Home from './pages/Home.vue';
-import RestCalculation from './pages/RestCalculation.vue';
+import EditSequence from './pages/EditSequence.vue';
+import RestSequence from './pages/RestSequence.vue';
+import Home from "./pages/Home.vue";
 
 tc.TzDatabase.init(tzdata);
 
@@ -14,7 +15,8 @@ const router = createRouter({
     history: createWebHashHistory(),
     routes: [
         { path: '/', component: Home },
-        { path: '/sequence/:sequence', component: RestCalculation },
+        { path: '/edit/:sequence', component: EditSequence },
+        { path: '/rest/:sequence', component: RestSequence },
     ],
 });
 

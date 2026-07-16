@@ -1,86 +1,46 @@
 <template>
   <div class="home">
-    <n-form class="form" :rules="rules">
-      <n-form-item path="sequence" label="Sequence Number">
-        <n-input-number class="sequence-number" :show-button="false" placeholder="123" v-model:value="sequence" />
-      </n-form-item>
+    <n-card title="New Sequence">
+      <n-form>
+        <n-form-item label="Sequence Number">
+          <n-input-number class="new-sequence-number" placeholder="123" v-model:value="newSequenceNumber" />
+        </n-form-item>
 
-      <n-form-item class="flight-item" v-for="(flight, index) in sortedFlights" :key="flight.id" :show-feedback="false">
-        <n-card class="flight-card" :title="`Day ${flight.day} - Flight ${index + 1}`">
-          <template #header-extra>
-            <n-button size="small" @click="() => removeFlight(index)">X</n-button>
-          </template>
+        <n-button class="create-button" type="primary" @click="createSequence">Create Sequence</n-button>
+      </n-form>
+    </n-card>
 
-          <flight-picker 
-            v-model:day="flights[index].day"
-            v-model:departure="flights[index].departure"
-            v-model:originCode="flights[index].origin"
-            v-model:destinationCode="flights[index].destination"
-
-            @add-return-flight="addFlight"
-          />
-        </n-card>
-      </n-form-item>
-
-      <div class="add-flight">
-        <n-button type="primary" :strong="true" @click="() => addFlight()">+</n-button>
+    <n-card v-if="savedSequences.length > 0" title="Past Sequences">
+      <div class="past-sequences">
+        <n-button class="sequence-button" type="primary" v-for="sequence in savedSequences" @click="() => loadSequence(sequence)">Sequence {{ sequence }}</n-button>
       </div>
-
-      <n-divider />
-
-      <div class="actions">
-        <n-button class="calculate-rest" type="primary" @click="() => router.push(`/sequence/${sequence}`)">Calculate Rest</n-button>
-      </div>
-    </n-form>
+    </n-card>
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { v4 as uuid } from 'uuid';
-import FlightPicker from '../components/FlightPicker.vue';
-import tc from 'timezonecomplete';
-import type { FormRules } from 'naive-ui';
-import type { Flight } from '../hooks/flight.ts';
-import { useLocalStorage } from "@vueuse/core";
+<script lang="ts" setup>
+import {useLocalStorage} from "@vueuse/core";
+import {ref} from "vue";
+import {useRouter} from "vue-router";
 
 const router = useRouter();
 
-const rules : FormRules = {
-  sequence: [
-    {
-      required: true,
-    }
-  ],
-};
+const newSequenceNumber = ref();
+const savedSequences = useLocalStorage('sequences', [] as number[]);
 
-const sequence = ref(0);
-const flightKey = computed(() => `sequence-${sequence.value}`);
-const flights = useLocalStorage(flightKey, [] as Flight[]);
+function createSequence() {
+  if(!newSequenceNumber.value) return;
 
-const sortedFlights = computed(() => {
-  return flights.value.sort((a, b) => {
-    const daySort = a.day - b.day;
-
-    return daySort || new tc.Duration(a.departure).milliseconds() - new tc.Duration(b.departure).milliseconds();
-  });
-});
-
-function addFlight(flight?: Flight) {
-  const lastFlight = sortedFlights.value[sortedFlights.value.length - 1];
-
-  flights.value.push(flight || {
-    id: uuid(),
-    day: flights.value.reduce((acc, current) => Math.max(acc, current.day), 1),
-    departure: lastFlight?.departure || '12:00',
-    origin: '',
-    destination: '',
-  });
+  if(savedSequences.value.find((sequence) => sequence === newSequenceNumber.value)) {
+    router.push(`/rest/${newSequenceNumber.value}`);
+  } else {
+    savedSequences.value.push(newSequenceNumber.value);
+    router.push(`/edit/${newSequenceNumber.value}`);
+  }
 }
 
-function removeFlight(i: number) {
-  flights.value.splice(i, 1);
+function loadSequence(sequence: number) {
+  router.push(`/rest/${sequence}`);
 }
 </script>
 
@@ -88,27 +48,20 @@ function removeFlight(i: number) {
 .home {
   padding: 1em;
 
-  h1 {
-    margin-bottom: 0;
-  }
-
-  h3 {
-    margin-top: 0;
-  }
-
-  .sequence-number {
+  .new-sequence-number {
     width: 100%;
   }
 
-  .add-flight {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2em 0 0 1em;
+  .create-button {
+    width: 100%;
   }
 
-  .actions {
-    .calculate-rest {
+  .past-sequences {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+
+    .sequence-button {
       width: 100%;
     }
   }
