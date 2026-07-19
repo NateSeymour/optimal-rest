@@ -1,89 +1,65 @@
 import {type Ref} from "vue";
 import tc, {DateTime, type Duration} from 'timezonecomplete';
 import { v4 as uuid } from 'uuid';
+import type {Maybe} from "../util/maybe.ts";
 
-type Maybe<T> = T | null;
+export type EventRelationship = 'before' | 'after' | 'during';
 
-const never = () => {
-  return DateTime.fromExcel(0, tc.zone('UTC'));
-};
-
-export class SimpleEvent {
-  public static __type: string = 'Custom';
+export interface EventBase {
+  type: string;
+  duration: Duration;
+  data: any;
 }
 
-export class Event<T extends SimpleEvent = SimpleEvent> {
-  id: string = uuid();
-  start: DateTime = never();
-  duration: Duration = tc.hours(0);
-
-  get end() { return this.start.add(this.duration); }
-
-  properties: Record<string, any> = {};
-
-  data: T;
-
-  at(start: DateTime, duration: Duration = tc.hours(0)) {
-    this.start = start;
-    this.duration = duration;
-
-    return this;
-  }
-
-  after(event: Event<any>, duration: Duration = tc.hours(0)) {
-    this.start = event.end;
-    this.duration = duration;
-
-    return this;
-  }
-
-  fill(first: Event<any>, second: Event<any>) {
-    this.start = first.end;
-    this.duration = first.end.diff(second.start);
-  }
-
-  before(event: Event<any>, duration: Duration, gap: Duration = tc.hours(0)) {
-    this.start = event.start.sub(duration).sub(gap);
-    this.duration = duration;
-
-    return this;
-  }
-
-  startNow(duration: Duration = tc.hours(0)) {
-    this.start = DateTime.nowLocal();
-    this.duration = duration;
-
-    return this;
-  }
-
-  with(properties: Record<string, any>) {
-    Object.assign(this.properties, properties);
-
-    return this;
-  }
-
-  constructor(config: { data: T }) {
-    this.data = config.data;
-  }
+export interface AbsoluteEvent extends EventBase {
+  timing: 'absolute';
+  start: DateTime;
 }
+
+export interface RelativeEvent extends EventBase {
+  timing: 'relative';
+  parent: string;
+  relationship: EventRelationship;
+  offset?: Duration;
+}
+
+export type Event = AbsoluteEvent | RelativeEvent;
 
 export class Schedule {
-  private _events: Event[] = [];
+  private _events: Record<string, Event> = {};
 
-  get events(): Event[] { return this._events; }
-  get start(): Maybe<Event> { return this._events[0] || null; }
-  get end(): Maybe<Event> { return this._events.at(-1) || null; }
+  private absolute(event: Event): AbsoluteEvent {
+    if(event.timing === 'absolute') return event;
+    if(event.timing === 'relative') return this.absolute(this._events[event.parent]);
 
-  sort() {
-    this._events.sort((a, b) => a.start.unixUtcMillis() - b.start.unixUtcMillis());
+    throw new Error('Absolutely relative event found!');
   }
 
+  get events(): AbsoluteEvent[] {
+    return Object.values(this._events).map(this.absolute).sort((a, b) => {
+      return a.start.unixUtcMillis() - b.start.unixUtcMillis();
+    });
+  }
+
+  get start(): Maybe<AbsoluteEvent> { return this.events[0] || null; }
+
+  get end(): Maybe<AbsoluteEvent> { return this.events.at(-1) || null; }
+
   add(event: Event) {
-    this._events.push(event);
+    const id = uuid();
 
-    this.sort();
+    this._events[id] = event;
 
-    return event;
+    return id;
+  }
+
+  import<T>(items: T[], resolver: (item: T) => Event) {
+    for(const item of items) {
+      this.add({
+        ...resolver(item),
+        data: item,
+      });
+    }
   }
 }
 

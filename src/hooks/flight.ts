@@ -2,7 +2,6 @@ import { computed, toValue, type ComputedRef, type Ref } from 'vue';
 import { distanceTo, headingTo, normalizeHeading } from 'geolocation-utils';
 import tc, { Duration } from 'timezonecomplete';
 import airports from '../data/airports.json';
-import type {SimpleEvent} from "./schedule.ts";
 import type {Maybe} from "../util/maybe.ts";
 
 export interface Airport {
@@ -15,16 +14,19 @@ export interface Airport {
   tz: string,
 }
 
-export class Flight implements SimpleEvent {
-  public static __type = 'Flight';
+export interface Flight {
+  period: number;
+  departure: string;
+  originCode: string;
+  destinationCode: string;
+}
 
-  period: number = 0;
-  departure: string = '12:00';
-  origin: Maybe<Airport> = null;
-  destination: Maybe<Airport> = null;
-  distance: number = 0;
-  heading: number = 0;
-  flightTime: Duration = tc.hours(0);
+export interface ResolvedFlight extends Flight{
+  origin: Maybe<Airport>;
+  destination: Maybe<Airport>;
+  distance: number;
+  heading: number;
+  duration: Duration;
 }
 
 export const useAirportAutocomplete = (iata: Ref<string> | string) => {
@@ -90,9 +92,9 @@ export const useFlightTime = (a: Ref<Airport | null>, b: Ref<Airport | null>): C
   return computed(() => calculateFlightTime(toValue(a), toValue(b)));
 };
 
-export const resolveFlight = (flight: Flight): Flight => {
-  const origin = getAirport(flight.origin);
-  const destination = getAirport(flight.destination);
+export const resolveFlight = (flight: Flight): ResolvedFlight => {
+  const origin = getAirport(flight.originCode);
+  const destination = getAirport(flight.destinationCode);
 
   if(!origin || !destination) {
     throw new Error('Origin or destination do not exist!');
@@ -106,7 +108,7 @@ export const resolveFlight = (flight: Flight): Flight => {
 
     distance: calculateDistance(origin, destination),
     heading: calculateHeading(origin, destination),
-    flightTime: calculateFlightTime(origin, destination),
+    duration: calculateFlightTime(origin, destination),
   };
 };
 
@@ -128,7 +130,7 @@ export const useFlight = (originCode: Ref<string>, destinationCode: Ref<string>)
   };
 };
 
-export const useSequenceStats = (flights: Ref<Flight[]>) => {
+export const useSequenceStats = (flights: Ref<ResolvedFlight[]>) => {
   const totalDays = computed(() => {
     return flights.value.reduce((acc, current) => Math.max(acc, current.period), 1);
   });
@@ -138,7 +140,7 @@ export const useSequenceStats = (flights: Ref<Flight[]>) => {
   });
 
   const totalFlightTime = computed(() => {
-    return flights.value.reduce((acc, current) => acc.add(current.flightTime as Duration), tc.hours(0));
+    return flights.value.reduce((acc, current) => acc.add(current.duration as Duration), tc.hours(0));
   });
 
   return { totalDays, totalDistance, totalFlightTime };

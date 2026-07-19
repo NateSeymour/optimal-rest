@@ -53,20 +53,39 @@
           <info-circle />
         </n-icon>
       </template>
-
-      <n-timeline>
-        <n-timeline-item 
-          v-for="(event, index) in schedule.events"
-          :key="index"
-          :content="event.content"
-          :time="event.time"
-        />
-      </n-timeline>
     </n-card>
   </div>
 </template>
 
 <script lang="ts" setup>
+import {useRoute} from "vue-router";
+import {useLocalStorage} from "@vueuse/core";
+import {computed} from "vue";
+import {type Flight, resolveFlight} from "../hooks/flight.ts";
+import {EventBase, Schedule} from "../hooks/schedule.ts";
+
+const route = useRoute();
+const sequence = useLocalStorage(`sequence-${route.params.sequence}`, {
+    number: route.params.sequence,
+    date: '01/01/2001',
+    flights: [] as [string, Flight][],
+});
+
+const flights = computed(() => {
+  return sequence.value.flights.map(([_, flight]) => resolveFlight(flight));
+});
+
+const schedule = computed(() => {
+  const schedule = new Schedule();
+
+  schedule.import(flights.value, (flight) => {
+    return {
+
+    };
+  });
+
+  return schedule;
+});
 </script>
 
 <style lang="scss" scoped>

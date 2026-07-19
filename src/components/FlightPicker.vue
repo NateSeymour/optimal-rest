@@ -4,7 +4,7 @@
       <div class="departure-time">
         <n-form-item label="Duty Period">
           <n-input-number 
-            v-model:value="flight.period"
+            v-model:value="period"
             :min="1"
             :max="10"
           />
@@ -12,7 +12,7 @@
 
          <n-form-item label="Departure Time">
           <n-time-picker 
-            v-model:formatted-value="flight.departure"
+            v-model:formatted-value="departure"
             format="HH:mm"
             value-format="HH:mm"
           />
@@ -44,26 +44,26 @@
       </div>
     </n-form>
 
-    <div v-if="flight.origin && flight.destination" class="pairing-display">
-      <span>{{ flight.origin.mun }}</span>
+    <div v-if="origin && destination" class="pairing-display">
+      <span>{{ origin.mun }}</span>
       <n-icon>
         <plane-departure />
       </n-icon>
-      <span>{{ flight.destination.mun }}</span>
+      <span>{{ destination.mun }}</span>
     </div>
 
-    <div v-if="flight.origin && flight.destination" class="statistics">
-      <n-statistic label="Distance" :value="flight.distance">
+    <div v-if="origin && destination" class="statistics">
+      <n-statistic label="Distance" :value="distance">
         <template #suffix>mi</template>
       </n-statistic>
 
-      <n-statistic label="Flight Time (Approx.)" :value="`${flight.flightTime.wholeHours()}:${flight.flightTime.minute()}`" />
+      <n-statistic label="Flight Time (Approx.)" :value="`${flightTime.wholeHours()}:${flightTime.minute()}`" />
     </div>
 
-    <div v-if="flight.origin && flight.destination" class="controls">
+    <div v-if="origin && destination" class="controls">
       <n-button 
         class="add-return-flight"
-        @click="() => emit('add-return-flight', { id: uuid(), day: flight.day + 1, departure: flight.departure, origin: flight.destination, destination: flight.origin })"
+        @click="() => emit('add-return-flight', { day: period + 1, departure: departure, origin: destination, destination: origin })"
       >
         Add Return Flight
       </n-button>
@@ -73,36 +73,25 @@
 
 <script lang="ts" setup>
 import {
-  calculateDistance,
-  calculateFlightTime,
-  calculateHeading,
-  type Flight,
-  getAirport,
-  useAirportAutocomplete
+  getAirport, useAirport,
+  useAirportAutocomplete, useDistance, useFlightTime
 } from '../hooks/flight';
-import { v4 as uuid } from 'uuid';
 import type { FormRules, SelectOption } from 'naive-ui';
 import { PlaneDeparture } from '@vicons/fa';
-import {ref, watch} from "vue";
 import {validateAirportCode} from "../util/validation.ts";
 
 const emit = defineEmits(['add-return-flight']);
 
-const flight = defineModel<Flight>('value', { required: true });
+const period = defineModel<number>('period', { required: true });
+const departure = defineModel<string>('departure', { required: true });
+const originCode = defineModel<string>('originCode', { required: true });
+const destinationCode = defineModel<string>('destinationCode', { required: true });
 
-const originCode = ref(flight.value.origin?.iata || '');
-const destinationCode = ref(flight.value.destination?.iata || '');
+const origin = useAirport(originCode);
+const destination = useAirport(destinationCode);
 
-watch([originCode, destinationCode], ([newOrigin, newDestination]) => {
-  const origin = getAirport(newOrigin);
-  const destination = getAirport(newDestination);
-
-  flight.value.origin = origin;
-  flight.value.destination = destination;
-  flight.value.distance = calculateDistance(origin, destination);
-  flight.value.heading = calculateHeading(origin, destination);
-  flight.value.flightTime = calculateFlightTime(origin, destination);
-});
+const distance = useDistance(origin, destination);
+const flightTime = useFlightTime(origin, destination);
 
 const rules : FormRules = {
   origin: [validateAirportCode(originCode, { required: true })],
