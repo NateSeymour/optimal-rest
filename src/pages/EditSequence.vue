@@ -25,7 +25,7 @@
       <n-divider />
 
       <div class="actions">
-        <n-button class="calculate-rest" type="primary" @click="() => router.push(`/sequence/${sequence.number}`)">Calculate Rest</n-button>
+        <n-button class="calculate-rest" type="primary" @click="() => router.push(`/rest/${sequence.number}`)">Calculate Rest</n-button>
       </div>
     </n-form>
   </div>

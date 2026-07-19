@@ -62,7 +62,8 @@ import {useRoute} from "vue-router";
 import {useLocalStorage} from "@vueuse/core";
 import {computed} from "vue";
 import {type Flight, resolveFlight} from "../hooks/flight.ts";
-import {EventBase, Schedule} from "../hooks/schedule.ts";
+import {Schedule} from "../hooks/schedule.ts";
+import tc, {DateTime, Duration} from "timezonecomplete";
 
 const route = useRoute();
 const sequence = useLocalStorage(`sequence-${route.params.sequence}`, {
@@ -78,11 +79,28 @@ const flights = computed(() => {
 const schedule = computed(() => {
   const schedule = new Schedule();
 
-  schedule.import(flights.value, (flight) => {
-    return {
+  schedule.importItems(flights.value, (flight) => {
+    const departureTime = new Duration(flight.departure);
+    const start = new DateTime(flight.departure, tc.zone(flight.origin!.tz))
+        .add(tc.days(flight.period - 1))
+        .add(departureTime);
 
+    return {
+      type: 'Flight',
+      duration: flight.duration,
+
+      timing: 'absolute',
+      start,
     };
   });
+
+  console.log(schedule);
+
+  return schedule;
+});
+
+const circadianSchedule = computed(() => {
+  const schedule = new Schedule();
 
   return schedule;
 });

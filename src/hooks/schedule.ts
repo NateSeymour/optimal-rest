@@ -1,5 +1,5 @@
 import {type Ref} from "vue";
-import tc, {DateTime, type Duration} from 'timezonecomplete';
+import {DateTime, type Duration} from 'timezonecomplete';
 import { v4 as uuid } from 'uuid';
 import type {Maybe} from "../util/maybe.ts";
 
@@ -8,7 +8,7 @@ export type EventRelationship = 'before' | 'after' | 'during';
 export interface EventBase {
   type: string;
   duration: Duration;
-  data: any;
+  data?: any;
 }
 
 export interface AbsoluteEvent extends EventBase {
@@ -53,7 +53,7 @@ export class Schedule {
     return id;
   }
 
-  import<T>(items: T[], resolver: (item: T) => Event) {
+  importItems<T>(items: T[], resolver: (item: T) => Event) {
     for(const item of items) {
       this.add({
         ...resolver(item),
