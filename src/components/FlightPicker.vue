@@ -63,7 +63,7 @@
     <div v-if="origin && destination" class="controls">
       <n-button 
         class="add-return-flight"
-        @click="() => emit('add-return-flight', { day: period + 1, departure: departure, origin: destination, destination: origin })"
+        @click="() => emit('add-return-flight', { period: period + 1, departure: departure, originCode: destinationCode, destinationCode: originCode })"
       >
         Add Return Flight
       </n-button>
