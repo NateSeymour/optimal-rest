@@ -19,9 +19,9 @@
 </template>
 
 <script lang="ts" setup>
-import {useLocalStorage} from "@vueuse/core";
-import {ref} from "vue";
-import {useRouter} from "vue-router";
+import {useLocalStorage} from '@vueuse/core';
+import {ref} from 'vue';
+import {useRouter} from 'vue-router';
 
 const router = useRouter();
 

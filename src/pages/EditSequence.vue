@@ -36,9 +36,9 @@ import {useRoute, useRouter} from 'vue-router';
 import FlightPicker from '../components/FlightPicker.vue';
 import type { FormRules } from 'naive-ui';
 import { type Flight } from '../hooks/flight.ts';
-import { useLocalStorage } from "@vueuse/core";
+import { useLocalStorage } from '@vueuse/core';
 import { v4 as uuid } from 'uuid';
-import {computed, watch} from "vue";
+import {computed, watch} from 'vue';
 
 const router = useRouter();
 const route = useRoute();

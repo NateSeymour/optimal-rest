@@ -7,8 +7,8 @@
 </template>
 
 <script setup lang="ts">
-import { Schedule } from "../hooks/schedule.ts";
-import {computed} from "vue";
+import { Schedule } from '../lib/schedule.ts';
+import {computed} from 'vue';
 
 const { schedule, scale } = defineProps<{
   schedule: Schedule,

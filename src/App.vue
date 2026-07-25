@@ -34,9 +34,9 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from "vue";
-import {useRouter} from "vue-router";
-import { ArrowLeft, Bars } from "@vicons/fa";
+import {computed, ref} from 'vue';
+import {useRouter} from 'vue-router';
+import { ArrowLeft, Bars } from '@vicons/fa';
 
 const router = useRouter();
 
@@ -47,9 +47,9 @@ const canGoBack = computed(() => {
 });
 
 const sequences = Object.keys(localStorage)
-    .filter(key => key.startsWith('sequence-'))
-    .map(sequence => sequence.replace('sequence-', ''))
-    .map(Number);
+  .filter(key => key.startsWith('sequence-'))
+  .map(sequence => sequence.replace('sequence-', ''))
+  .map(Number);
 </script>
 
 <style lang="scss">

@@ -1,5 +1,5 @@
-import {type Ref} from "vue";
-import {getAirport} from "../hooks/flight.ts";
+import {type Ref} from 'vue';
+import {getAirport} from '../hooks/flight.ts';
 
 export const validateAirportCode = (iata: Ref<string>, opts: any) => ({
   ...opts,

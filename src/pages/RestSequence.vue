@@ -24,20 +24,20 @@
 </template>
 
 <script lang="ts" setup>
-import {useRoute} from "vue-router";
-import {useLocalStorage} from "@vueuse/core";
-import {computed, ref} from "vue";
-import {type Flight, resolveFlight} from "../hooks/flight.ts";
-import {Schedule} from "../hooks/schedule.ts";
-import tc, {DateTime, Duration} from "timezonecomplete";
-import {InfoCircle} from "@vicons/fa";
-import ScheduleView from "../components/ScheduleView.vue";
+import {useRoute} from 'vue-router';
+import {useLocalStorage} from '@vueuse/core';
+import {computed, ref} from 'vue';
+import {type Flight, resolveFlight} from '../hooks/flight.ts';
+import {Schedule} from '../lib/schedule.ts';
+import tc, {DateTime, Duration} from 'timezonecomplete';
+import {InfoCircle} from '@vicons/fa';
+import ScheduleView from '../components/ScheduleView.vue';
 
 const route = useRoute();
 const sequence = useLocalStorage(`sequence-${route.params.sequence}`, {
-    number: route.params.sequence,
-    date: '01/01/2001',
-    flights: [] as [string, Flight][],
+  number: route.params.sequence,
+  date: '01/01/2001',
+  flights: [] as [string, Flight][],
 });
 
 const flights = computed(() => {
@@ -52,8 +52,8 @@ const schedule = computed(() => {
   schedule.importItems(flights.value, (flight) => {
     const departureTime = new Duration(flight.departure);
     const start = new DateTime(sequence.value.date, tc.zone(flight.origin!.tz))
-        .add(tc.days(flight.period - 1))
-        .add(departureTime);
+      .add(tc.days(flight.period - 1))
+      .add(departureTime);
 
     return {
       type: 'Flight',

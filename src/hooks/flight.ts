@@ -2,7 +2,7 @@ import { computed, toValue, type ComputedRef, type Ref } from 'vue';
 import { distanceTo, headingTo, normalizeHeading } from 'geolocation-utils';
 import tc, { Duration } from 'timezonecomplete';
 import airports from '../data/airports.json';
-import type {Maybe} from "../util/maybe.ts";
+import type {Maybe} from '../util/maybe.ts';
 
 export interface Airport {
   name: string,

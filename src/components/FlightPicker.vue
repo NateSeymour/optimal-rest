@@ -78,7 +78,7 @@ import {
 } from '../hooks/flight';
 import type { FormRules, SelectOption } from 'naive-ui';
 import { PlaneDeparture } from '@vicons/fa';
-import {validateAirportCode} from "../util/validation.ts";
+import {validateAirportCode} from '../util/validation.ts';
 
 const emit = defineEmits(['add-return-flight']);
 
@@ -99,14 +99,14 @@ const rules : FormRules = {
 };
 
 const autocompleteLabel = (option: SelectOption) => {
-  const airport = getAirport(option.label as string)
+  const airport = getAirport(option.label as string);
 
   if(!airport) {
     return `Unknown Airport (${option.label})`;
   }
 
   return `${airport.name} (${airport.iata}/${airport.icao})`;
-}
+};
 </script>
 
 <style lang="scss" scoped>
