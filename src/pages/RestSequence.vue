@@ -28,7 +28,7 @@ import {useRoute} from 'vue-router';
 import {useLocalStorage} from '@vueuse/core';
 import {computed, ref} from 'vue';
 import {type Flight, resolveFlight} from '../hooks/flight.ts';
-import {Schedule} from '../lib/schedule.ts';
+import type {Schedule} from '../lib/schedule.ts';
 import tc, {DateTime, Duration} from 'timezonecomplete';
 import {InfoCircle} from '@vicons/fa';
 import ScheduleView from '../components/ScheduleView.vue';
@@ -47,30 +47,13 @@ const flights = computed(() => {
 const options = ref({});
 
 const schedule = computed(() => {
-  const schedule = new Schedule();
-
-  schedule.importItems(flights.value, (flight) => {
-    const departureTime = new Duration(flight.departure);
-    const start = new DateTime(sequence.value.date, tc.zone(flight.origin!.tz))
-      .add(tc.days(flight.period - 1))
-      .add(departureTime);
-
-    return {
-      type: 'Flight',
-      duration: flight.duration,
-
-      timing: 'absolute',
-      start,
-    };
-  });
-
-  console.log(schedule);
+  const schedule: Schedule = [];
 
   return schedule;
 });
 
 const circadianSchedule = computed(() => {
-  const schedule = new Schedule();
+  const schedule: Schedule = [];
 
   return schedule;
 });

@@ -12,7 +12,7 @@
 
     <n-card v-if="savedSequences.length > 0" title="Past Sequences">
       <div class="past-sequences">
-        <n-button class="sequence-button" type="primary" v-for="sequence in savedSequences" @click="() => loadSequence(sequence)">Sequence {{ sequence }}</n-button>
+        <n-button class="sequence-button" type="primary" v-for="sequence in savedSequences" :key="sequence" @click="() => loadSequence(sequence)">Sequence {{ sequence }}</n-button>
       </div>
     </n-card>
   </div>

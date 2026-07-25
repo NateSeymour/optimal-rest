@@ -58,7 +58,7 @@ const sequence = useLocalStorage(`sequence-${route.params.sequence}`, {
 });
 
 const flights = computed(() => {
-  return sequence.value.flights.sort(([_1, a], [_2, b]) => {
+  return sequence.value.flights.toSorted(([_1, a], [_2, b]) => {
     return a.period - b.period;
   });
 });

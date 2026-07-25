@@ -22,6 +22,7 @@
       <div class="saved-sequences">
         <n-button
           v-for="sequence in sequences"
+          :key="sequence"
           class="sequence"
           type="primary"
           @click="() => { router.push(`/sequence/${sequence}`); showMenu = false; }"
