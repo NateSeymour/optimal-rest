@@ -28,7 +28,7 @@ import {useRoute} from 'vue-router';
 import {useLocalStorage} from '@vueuse/core';
 import {computed, ref} from 'vue';
 import {type Flight, resolveFlight} from '../hooks/flight.ts';
-import type {Schedule} from '../lib/schedule.ts';
+import {createRepeatingScheduleEvent, type Schedule} from '../lib/schedule.ts';
 import tc, {DateTime, Duration} from 'timezonecomplete';
 import {InfoCircle} from '@vicons/fa';
 import ScheduleView from '../components/ScheduleView.vue';
@@ -53,9 +53,20 @@ const schedule = computed(() => {
 });
 
 const circadianSchedule = computed(() => {
-  const schedule: Schedule = [];
+  const bedTime = new Duration('20:00');
+  let wakeUpTime = new Duration('04:00');
 
-  return schedule;
+  if(wakeUpTime.hours() < bedTime.hours()) {
+    wakeUpTime = wakeUpTime.add(tc.hours(24));
+  }
+
+  const sleepPeriod = wakeUpTime.sub(bedTime);
+  const wakePeriod = tc.hours(24).sub(sleepPeriod);
+
+  return createRepeatingScheduleEvent({ start: new DateTime(), end: new DateTime(), offset: wakePeriod }, {
+    type: 'sleep',
+    duration: sleepPeriod,
+  });
 });
 </script>
 

@@ -3,13 +3,14 @@ import {DateTime, type Duration} from 'timezonecomplete';
 export interface RepeatTiming {
   start: DateTime;
   end: DateTime;
-  allowPartialEvent: boolean;
+  offset: Duration;
+  allowPartialEvent?: boolean;
 }
 
 export interface UnresolvedScheduleEvent {
   type: string;
   duration: Duration;
-  data: any;
+  data?: any;
 }
 
 export interface ScheduleEvent extends UnresolvedScheduleEvent {
@@ -54,4 +55,23 @@ export const scheduleView = (schedule: Schedule, view: ScheduleView) => {
       return 0;
     });
   }
+};
+
+export const createRepeatingScheduleEvent = (timing: RepeatTiming, event: UnresolvedScheduleEvent) => {
+  const schedule: Schedule = [];
+
+  let currentTime: DateTime = timing.start;
+  while(currentTime.unixUtcMillis() < timing.end.unixUtcMillis()) {
+    const eventEnd = currentTime.add(event.duration);
+    if(eventEnd.unixUtcMillis() < timing.end.unixUtcMillis() || timing.allowPartialEvent) {
+      schedule.push({
+        ...event,
+        start: currentTime,
+      });
+    }
+
+    currentTime = eventEnd.add(timing.offset);
+  }
+
+  return schedule;
 };
