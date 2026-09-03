@@ -35,7 +35,7 @@ function createSequence() {
     router.push(`/rest/${newSequenceNumber.value}`);
   } else {
     savedSequences.value.push(newSequenceNumber.value);
-    router.push(`/edit/${newSequenceNumber.value}`);
+    router.push(`/sequence/create/${newSequenceNumber.value}`);
   }
 }
 

@@ -5,7 +5,7 @@ import tzdata from 'tzdata';
 import naive from 'naive-ui';
 
 import App from './App.vue';
-import EditSequence from './pages/EditSequence.vue';
+import CreateSequence from './pages/sequence/CreateSequence.vue';
 import RestSequence from './pages/RestSequence.vue';
 import Home from './pages/Home.vue';
 
@@ -15,7 +15,9 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/', component: Home },
-    { path: '/edit/:sequence', component: EditSequence },
+
+    { path: '/sequence/create/:sequence', component: CreateSequence },
+
     { path: '/rest/:sequence', component: RestSequence },
   ],
 });

@@ -23,7 +23,7 @@
         <n-form-item path="origin" label="Origin">
           <n-auto-complete 
             v-model:value="originCode"
-            :options="useAirportAutocomplete(originCode)"
+            :options="originOptions"
             placeholder="CLT"
             :render-label="autocompleteLabel"
             blur-after-select
@@ -34,7 +34,7 @@
         <n-form-item path="destination" label="Destination">
           <n-auto-complete 
             v-model:value="destinationCode" 
-            :options="useAirportAutocomplete(destinationCode)"
+            :options="destinationOptions"
             placeholder="CDG"
             :render-label="autocompleteLabel"
             blur-after-select
@@ -72,13 +72,11 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  getAirport, useAirport,
-  useAirportAutocomplete, useDistance, useFlightTime
-} from '../hooks/flight';
 import type { FormRules, SelectOption } from 'naive-ui';
 import { PlaneDeparture } from '@vicons/fa';
 import {validateAirportCode} from '../util/validation.ts';
+import {calculateDistance, calculateFlightTime, getAirport, queryAirports} from "../lib/airport.ts";
+import {computed} from "vue";
 
 const emit = defineEmits(['add-return-flight']);
 
@@ -87,11 +85,14 @@ const departure = defineModel<string>('departure', { required: true });
 const originCode = defineModel<string>('originCode', { required: true });
 const destinationCode = defineModel<string>('destinationCode', { required: true });
 
-const origin = useAirport(originCode);
-const destination = useAirport(destinationCode);
+const originOptions = computed(() => queryAirports(originCode.value));
+const destinationOptions = computed(() => queryAirports(destinationCode.value));
 
-const distance = useDistance(origin, destination);
-const flightTime = useFlightTime(origin, destination);
+const origin = computed(() => getAirport(originCode.value));
+const destination = computed(() => getAirport(destinationCode.value));
+
+const distance = computed(() => calculateDistance(origin.value, destination.value));
+const flightTime = computed(() => calculateFlightTime(origin.value, destination.value));
 
 const rules : FormRules = {
   origin: [validateAirportCode(originCode, { required: true })],

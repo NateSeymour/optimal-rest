@@ -27,7 +27,7 @@
 import {useRoute} from 'vue-router';
 import {useLocalStorage} from '@vueuse/core';
 import {computed, ref} from 'vue';
-import {type Flight, resolveFlight} from '../hooks/flight.ts';
+import {type Flight, resolveFlight} from '../lib/flight.ts';
 import {createRepeatingScheduleEvent, type Schedule} from '../lib/schedule.ts';
 import tc, {DateTime, Duration} from 'timezonecomplete';
 import {InfoCircle} from '@vicons/fa';

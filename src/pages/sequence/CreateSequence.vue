@@ -33,9 +33,9 @@
 
 <script setup lang="ts">
 import {useRoute, useRouter} from 'vue-router';
-import FlightPicker from '../components/FlightPicker.vue';
+import FlightPicker from '../../components/FlightPicker.vue';
 import type { FormRules } from 'naive-ui';
-import { type Flight } from '../hooks/flight.ts';
+import { type Flight } from '../../lib/flight.ts';
 import { useLocalStorage } from '@vueuse/core';
 import { v4 as uuid } from 'uuid';
 import {computed, watch} from 'vue';
@@ -68,6 +68,7 @@ function addFlight(flight?: Flight) {
 
   sequence.value.flights.push([uuid(), flight || {
     period: maxDuty,
+    callsign: '',
     departure: '12:00',
     originCode: '',
     destinationCode: '',
