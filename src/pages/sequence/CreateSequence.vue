@@ -25,7 +25,7 @@
       <n-divider />
 
       <div class="actions">
-        <n-button class="calculate-rest" type="primary" @click="() => router.push(`/rest/${sequence.number}`)">Calculate Rest</n-button>
+        <n-button class="calculate-rest" type="primary" @click="() => router.push(`/rest/calculate/${sequence.number}`)">Calculate Rest</n-button>
       </div>
     </n-form>
   </div>
@@ -53,7 +53,6 @@ const rules : FormRules = {
 
 const sequence = useLocalStorage(`sequence-${route.params.sequence}`, {
   number: route.params.sequence,
-  date: '01/01/2001',
   flights: [] as [string, Flight][],
 });
 

@@ -25,9 +25,9 @@ export const queryAirports = (term: string) => {
   return Object.values(airports).filter(airport => {
     return airport.iata.includes(input) || airport.icao.includes(input);
   })
-    .map(code => ({
-      label: code,
-      value: code,
+    .map(airport => ({
+      label: airport.iata,
+      value: airport.iata,
     }));
 };
 

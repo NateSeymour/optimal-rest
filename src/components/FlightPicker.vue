@@ -75,8 +75,8 @@
 import type { FormRules, SelectOption } from 'naive-ui';
 import { PlaneDeparture } from '@vicons/fa';
 import {validateAirportCode} from '../util/validation.ts';
-import {calculateDistance, calculateFlightTime, getAirport, queryAirports} from "../lib/airport.ts";
-import {computed} from "vue";
+import {calculateDistance, calculateFlightTime, getAirport, queryAirports} from '../lib/airport.ts';
+import {computed} from 'vue';
 
 const emit = defineEmits(['add-return-flight']);
 

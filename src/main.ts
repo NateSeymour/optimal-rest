@@ -6,7 +6,7 @@ import naive from 'naive-ui';
 
 import App from './App.vue';
 import CreateSequence from './pages/sequence/CreateSequence.vue';
-import RestSequence from './pages/RestSequence.vue';
+import CalculateRest from './pages/rest/CalculateRest.vue';
 import Home from './pages/Home.vue';
 
 tc.TzDatabase.init(tzdata);
@@ -18,7 +18,7 @@ const router = createRouter({
 
     { path: '/sequence/create/:sequence', component: CreateSequence },
 
-    { path: '/rest/:sequence', component: RestSequence },
+    { path: '/rest/calculate/:sequence', component: CalculateRest },
   ],
 });
 
