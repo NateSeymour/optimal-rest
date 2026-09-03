@@ -6,7 +6,7 @@
       :step="1"
       :min="0"
       :max="24"
-      :format-tooltip="formatTooltip"
+      :tooltip="false"
       :marks="marks"
   />
 </template>
@@ -24,13 +24,7 @@ const sleepTime = computed(() => {
 
 const reversed = computed(() => sleepTime.value !== sleepDifference.value);
 
-const formatTooltip = (value: number) => `${String(value).padStart(2, '0')}:00`;
-
-const marks = {
-  2: '02:00',
-  12: '12:00',
-  22: '22:00',
-};
+const marks = computed(() => Object.fromEntries(sleep.value.map(time => [time, `${String(time).padStart(2, '0')}:00`])));
 </script>
 
 <style lang="scss">
