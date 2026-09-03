@@ -1,3 +1,67 @@
 import type {Sequence} from './sequence.ts';
+import {type Schedule, solve} from './schedule.ts';
+import tc, {DateTime} from 'timezonecomplete';
+import type {CircadianRhythm} from './sleep.ts';
 
-export const createOptimizedRestSchedule = (sequence: Sequence) => {};
+export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr: CircadianRhythm) => {
+  const schedule: Schedule = [];
+
+  // Add flights
+  for(const flight of sequence.flights) {
+    schedule.push({
+      type: 'flight-container',
+      transparent: true,
+      children: [
+        {
+          type: 'preparation',
+          duration: tc.hours(1),
+        },
+        {
+          type: 'transportation',
+          duration: tc.hours(1),
+        },
+        {
+          type: 'briefing',
+          duration: tc.hours(1),
+        },
+        {
+          type: 'flight',
+          title: `Flight to ${flight.destination.iata}`,
+          start: new tc.DateTime(date, tc.zone(flight.origin.tz))
+            .add(tc.days(flight.period - 1))
+            .add(new tc.Duration(flight.departure)),
+          duration: flight.duration,
+          data: flight,
+        },
+        {
+          type: 'debrief',
+          title: 'Debrief',
+          duration: tc.minutes(30),
+        }
+      ],
+      data: flight,
+    });
+  }
+
+  // Solve for flights
+  solve(schedule);
+
+  // Add circadian rhythm
+  schedule.push({
+    type: 'circadian-sleep',
+    transparent: true,
+    duration: tc.hours(8),
+    timing: {
+      type: 'repeat',
+      start: schedule[0].timing.start,
+      end: schedule[-1].timing.start,
+      gap: tc.hours(24).sub(cr.bedtime),
+    },
+  });
+
+  solve(schedule);
+
+  //
+
+  return schedule;
+};

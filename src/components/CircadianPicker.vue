@@ -12,19 +12,30 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import {computed, type ComputedRef, ref, watch} from 'vue';
+import type { CircadianRhythm } from '../lib/sleep';
+import tc from 'timezonecomplete';
+
+const emit = defineEmits(['update']);
 
 const sleep = ref([6, 22]);
 
-const sleepDifference = computed(() => Math.abs(sleep.value[0] - sleep.value[1]));
+const reversed = computed(() => Math.abs(sleep.value[0] - sleep.value[1]) > 12);
 
-const sleepTime = computed(() => {
-  return Math.min(sleepDifference.value, 24 - sleepDifference.value);
+const circadianRhythm: ComputedRef<CircadianRhythm> = computed(() => {
+  const diff = Math.abs(sleep.value[0] - sleep.value[1]);
+
+  return {
+    bedtime: tc.hours(reversed.value ? sleep.value[0] : sleep.value[1]),
+    sleeptime: tc.hours(Math.min(diff, 24 - diff)),
+  };
 });
 
-const reversed = computed(() => sleepTime.value !== sleepDifference.value);
-
 const marks = computed(() => Object.fromEntries(sleep.value.map(time => [time, `${String(time).padStart(2, '0')}:00`])));
+
+watch(circadianRhythm, (newCircadianRhythm) => {
+  emit('update', newCircadianRhythm);
+}, { immediate: true });
 </script>
 
 <style lang="scss">

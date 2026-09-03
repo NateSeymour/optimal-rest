@@ -12,8 +12,8 @@ export interface Flight {
 }
 
 export interface ResolvedFlight extends Flight {
-  origin: Maybe<Airport>;
-  destination: Maybe<Airport>;
+  origin: Airport;
+  destination: Airport;
   distance: number;
   heading: number;
   duration: Duration;

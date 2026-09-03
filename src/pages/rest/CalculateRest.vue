@@ -1,19 +1,19 @@
 <template>
   <div class="rest-calculation">
-    <n-card title="Circadian Rhythm">
-      <CircadianPicker />
+    <n-card title="Sequence">
+      <n-date-picker
+          v-model:value="date"
+          format="dd.MM.YYYY"
+      />
     </n-card>
 
-    <n-card title="Schedule">
-      <template #header-extra>
-        <n-icon size="medium">
-          <info-circle />
-        </n-icon>
-      </template>
-
-      <ScheduleView :schedule="schedule" :scale="1" />
-      <ScheduleView :schedule="circadianSchedule" :scale="1" />
+    <n-card title="My Sleep Schedule">
+      <CircadianPicker
+          @update="(value) => circadianRhythm = value"
+      />
     </n-card>
+
+    <!-- <ScheduleView :schedule="schedule" :scale="1" /> -->
   </div>
 </template>
 
@@ -22,12 +22,26 @@ import {useRoute} from 'vue-router';
 import {InfoCircle} from '@vicons/fa';
 import ScheduleView from '../../components/ScheduleView.vue';
 import {loadSequence} from '../../lib/sequence.ts';
-import {computed} from 'vue';
+import {computed, type Ref, ref} from 'vue';
 import CircadianPicker from '../../components/CircadianPicker.vue';
+import {createOptimizedRestSchedule} from "../../lib/rest.ts";
+import type {CircadianRhythm} from "../../lib/sleep.ts";
+import tc from 'timezonecomplete';
 
 const route = useRoute();
-const sequence = computed(() => {
-  return loadSequence(`sequence-${route.params.sequence}`, '01/01/2001');
+
+const date = ref('01.01.2001');
+
+const circadianRhythm: Ref<CircadianRhythm> = ref({
+  bedtime: tc.hours(22),
+  sleeptime: tc.hours(8),
+});
+
+const schedule = computed(() => {
+  const sequence = loadSequence(`sequence-${route.params.sequence}`);
+  if(!sequence) return null;
+
+  return createOptimizedRestSchedule(sequence, date.value);
 });
 </script>
 
