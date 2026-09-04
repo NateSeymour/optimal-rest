@@ -1,6 +1,6 @@
 import type {Sequence} from './sequence.ts';
 import {type Schedule, solve} from './schedule.ts';
-import tc, {DateTime} from 'timezonecomplete';
+import tc from 'timezonecomplete';
 import type {CircadianRhythm} from './sleep.ts';
 
 export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr: CircadianRhythm) => {
@@ -50,18 +50,16 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
   schedule.push({
     type: 'circadian-sleep',
     transparent: true,
-    duration: tc.hours(8),
-    timing: {
-      type: 'repeat',
-      start: schedule[0].timing.start,
-      end: schedule[-1].timing.start,
-      gap: tc.hours(24).sub(cr.bedtime),
-    },
+    start: new tc.DateTime(date, tc.local())
+      .sub(tc.days(1))
+      .add(tc.hours(cr.bedtime)),
+    end: schedule.at(-1)!.end,
+    duration: tc.hours(cr.duration),
+    repeat: true,
+    gap: tc.hours(24).sub(tc.hours(cr.duration)),
   });
 
   solve(schedule);
-
-  //
 
   return schedule;
 };
