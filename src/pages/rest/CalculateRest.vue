@@ -14,16 +14,24 @@
       />
     </n-card>
 
-    <div v-if="schedule">
+    <div class="schedule" v-if="schedule">
       <ScheduleView
           :schedule="schedule"
           :scale="4"
           :columns="[
               ['circadian-sleep'],
-              ['preparation', 'transportation', 'briefing', 'flight', 'debrief']
+              ['preparation', 'transportation', 'briefing', 'flight', 'debrief', 'layover']
           ]"
           :colors="{
-            'circadian-sleep': '#4997d0',
+            'circadian-sleep': '#104F55',
+
+            'preparation': '#9EC5AB',
+            'transportation': '#9EC5AB',
+            'briefing': '#9EC5AB',
+            'flight': '#D782BA',
+            'debrief': '#9EC5AB',
+
+            'layover': '#01200F',
           }"
       />
     </div>
@@ -57,22 +65,15 @@ const schedule = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-.loading-anim {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-}
-
-div.rest-calculation {
+.rest-calculation {
   padding: 1em;
   display: flex;
   flex-direction: column;
   gap: 1em;
+  height: 100%;
 
-  .statistics {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+  .schedule {
+    overflow-y: scroll;
   }
 }
 </style>

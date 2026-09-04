@@ -118,6 +118,29 @@ export const solve = (schedule: Schedule) : Schedule => {
   return schedule.sort((a, b) => a.start!.unixUtcMillis() - b.start!.unixUtcMillis());
 };
 
+export const bridge = (schedule: Schedule, type: string, bridger: (a: ScheduleEvent, b: ScheduleEvent) => ScheduleEvent): Schedule => {
+  const events = schedule.filter(event => event.type === type);
+
+  const bridges = events.length - 1;
+  for(let i = 0; i < bridges; i++) {
+    const a = events[i];
+    const b = events[i + 1];
+
+    if(!a.end || !b.start) {
+      throw new Error('Only resolved events can be bridged!');
+    }
+
+    schedule.push({
+      ...bridger(a, b),
+      start: a.end,
+      end: b.start,
+      duration: b.start.diff(a.end),
+    });
+  }
+
+  return solve(schedule);
+};
+
 export interface ScheduleMergeOptions {
   empty: string;
 }

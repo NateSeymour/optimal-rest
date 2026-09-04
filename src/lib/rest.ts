@@ -1,53 +1,70 @@
 import type {Sequence} from './sequence.ts';
-import {type Schedule, solve} from './schedule.ts';
+import {bridge, type Schedule, solve} from './schedule.ts';
 import tc from 'timezonecomplete';
 import type {CircadianRhythm} from './sleep.ts';
 
 export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr: CircadianRhythm) => {
   const schedule: Schedule = [];
 
+  const periods = Object.groupBy(sequence.flights, (flight) => flight.period);
+
   // Add flights
-  for(const flight of sequence.flights) {
+  for(const [period, flights] of Object.entries(periods)) {
+    if(!flights || flights.length < 1) continue; // More than anything to get TS to shut up. Flights should never be undefined.
+
     schedule.push({
-      type: 'flight-container',
+      type: 'duty-period',
+      title: `Duty Period ${period}`,
       transparent: true,
       children: [
         {
           type: 'preparation',
-          title: 'Prepare for Flight',
+          title: 'Prepare for Duty Period',
           duration: tc.hours(1),
         },
         {
           type: 'transportation',
-          title: `Transportation to ${flight.origin.iata}`,
+          title: `Transportation to ${flights[0].origin.iata}`,
           duration: tc.hours(1),
         },
-        {
-          type: 'briefing',
-          title: 'Briefing',
-          duration: tc.hours(1),
-        },
-        {
-          type: 'flight',
-          title: `Flight to ${flight.destination.iata}`,
-          start: new tc.DateTime(date, tc.zone(flight.origin.tz))
-            .add(tc.days(flight.period - 1))
-            .add(new tc.Duration(flight.departure)),
-          duration: flight.duration,
+        ...flights.map(flight => ({
+          type: 'flight-container',
+          transparent: true,
+          children: [
+            {
+              type: 'briefing',
+              title: 'Briefing',
+              duration: tc.hours(1),
+            },
+            {
+              type: 'flight',
+              title: `Flight to ${flight.destination.iata}`,
+              start: new tc.DateTime(date, tc.zone(flight.origin.tz))
+                .add(tc.days(flight.period - 1))
+                .add(new tc.Duration(flight.departure)),
+              duration: flight.duration,
+              data: flight,
+            },
+            {
+              type: 'debrief',
+              title: 'Debrief',
+              duration: tc.minutes(30),
+            }
+          ],
           data: flight,
-        },
-        {
-          type: 'debrief',
-          title: 'Debrief',
-          duration: tc.minutes(30),
-        }
+        }))
       ],
-      data: flight,
+      data: flights,
     });
   }
 
-  // Solve for flights
   solve(schedule);
+
+  // Add layovers
+  bridge(schedule, 'duty-period', (a, b) => ({
+    type: 'layover',
+    title: `Layover in ${a.data.at(-1).destination.mun}`,
+  }));
 
   // Add circadian rhythm
   schedule.push({
