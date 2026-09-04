@@ -15,7 +15,17 @@
     </n-card>
 
     <div v-if="schedule">
-      <ScheduleView :schedule="schedule" :scale="2" />
+      <ScheduleView
+          :schedule="schedule"
+          :scale="4"
+          :columns="[
+              ['circadian-sleep'],
+              ['preparation', 'transportation', 'briefing', 'flight', 'debrief']
+          ]"
+          :colors="{
+            'circadian-sleep': '#4997d0',
+          }"
+      />
     </div>
   </div>
 </template>
@@ -23,11 +33,11 @@
 <script lang="ts" setup>
 import {useRoute} from 'vue-router';
 import {loadSequence} from '../../lib/sequence.ts';
-import {computed, type Ref, ref, toRaw, toValue} from 'vue';
+import {computed, type Ref, ref} from 'vue';
 import CircadianPicker from '../../components/CircadianPicker.vue';
-import {createOptimizedRestSchedule} from "../../lib/rest.ts";
-import type {CircadianRhythm} from "../../lib/sleep.ts";
-import ScheduleView from "../../components/ScheduleView.vue";
+import {createOptimizedRestSchedule} from '../../lib/rest.ts';
+import type {CircadianRhythm} from '../../lib/sleep.ts';
+import ScheduleView from '../../components/ScheduleView.vue';
 
 const route = useRoute();
 

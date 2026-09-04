@@ -14,14 +14,17 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
       children: [
         {
           type: 'preparation',
+          title: 'Prepare for Flight',
           duration: tc.hours(1),
         },
         {
           type: 'transportation',
+          title: `Transportation to ${flight.origin.iata}`,
           duration: tc.hours(1),
         },
         {
           type: 'briefing',
+          title: 'Briefing',
           duration: tc.hours(1),
         },
         {
@@ -49,6 +52,7 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
   // Add circadian rhythm
   schedule.push({
     type: 'circadian-sleep',
+    title: 'Circadian Sleep',
     transparent: true,
     start: new tc.DateTime(date, tc.local())
       .sub(tc.days(1))

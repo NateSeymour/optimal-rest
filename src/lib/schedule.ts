@@ -48,6 +48,7 @@ export const solve = (schedule: Schedule) : Schedule => {
         const start = events.at(-1)?.end?.add(item.gap || tc.hours(0)) || item.start;
         events.push({
           type: item.type,
+          title: item.title,
           transparent: item.transparent,
           start,
           end: start.add(item.duration),
@@ -117,6 +118,8 @@ export const solve = (schedule: Schedule) : Schedule => {
   return schedule.sort((a, b) => a.start!.unixUtcMillis() - b.start!.unixUtcMillis());
 };
 
-export interface ScheduleMergeOptions {}
+export interface ScheduleMergeOptions {
+  empty: string;
+}
 
-export const merge = (schdule: Schedule, from: string, to: string, options: ScheduleMergeOptions) => {};
+export const merge = (schedule: Schedule, from: string, to: string, options: ScheduleMergeOptions) => {};
