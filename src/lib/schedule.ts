@@ -34,7 +34,7 @@ export const solve = (schedule: Schedule) : Schedule => {
       item.end = children.at(-1)!.end!;
       item.duration = item.end.diff(item.start);
 
-      schedule.splice(i, 0, ...children);
+      schedule.splice(i + 1, 0, ...children);
 
       delete item.children;
     }
@@ -57,9 +57,6 @@ export const solve = (schedule: Schedule) : Schedule => {
       } while(events.at(-1)!.end!.unixUtcMillis() < item.end.unixUtcMillis());
 
       schedule.splice(i, 1, ...events);
-    }
-    else if(item.start && item.end) {
-      continue;
     }
     else if(item.start && item.duration) {
       item.end = item.start.add(item.duration);

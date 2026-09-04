@@ -57,6 +57,8 @@ const circadianRhythm: Ref<CircadianRhythm> = ref({
 });
 
 const schedule = computed(() => {
+  console.log(circadianRhythm.value);
+
   const sequence = loadSequence(`sequence-${route.params.sequence}`);
   if(!sequence || !date.value) return null;
 

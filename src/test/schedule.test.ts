@@ -3,27 +3,31 @@ import {type Schedule, solve} from '../lib/schedule.ts';
 import tc from 'timezonecomplete';
 
 test('Containerized Events', () => {
-  const schedule: Schedule = [{
-    type: 'container',
-    transparent: true,
-    children: [
-      {
-        type: 'one',
-        duration: tc.hours(1),
-      },
-      {
-        type: 'two',
-        start: tc.DateTime.now(),
-        duration: tc.hours(1),
-      }
-    ],
-  }];
+  const schedule: Schedule = [
+    {
+      type: 'container',
+      transparent: true,
+      children: [
+        {
+          type: 'one',
+          duration: tc.hours(1),
+        },
+        {
+          type: 'two',
+          start: tc.DateTime.now(),
+          duration: tc.hours(1),
+        }
+      ],
+    },
+    {
+      type: 'relative-follower',
+      duration: tc.hours(1),
+    },
+  ];
 
   solve(schedule);
 
-  console.log(schedule);
-
-  expect(schedule.length).toBe(3);
+  expect(schedule.length).toBe(4);
 
   for(const event of schedule) {
     if(event.type === 'container') {

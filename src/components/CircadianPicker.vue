@@ -24,10 +24,11 @@ const reversed = computed(() => Math.abs(sleep.value[0] - sleep.value[1]) > 12);
 
 const circadianRhythm: ComputedRef<CircadianRhythm> = computed(() => {
   const diff = Math.abs(sleep.value[0] - sleep.value[1]);
+  const duration =  Math.min(diff, 24 - diff);
 
   return {
-    bedtime: reversed.value ? sleep.value[1] : sleep.value[0],
-    duration: Math.min(diff, 24 - diff),
+    bedtime: diff > 12 ? sleep.value[1] : sleep.value[0],
+    duration,
   };
 });
 

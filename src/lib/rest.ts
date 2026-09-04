@@ -7,6 +7,7 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
   const schedule: Schedule = [];
 
   const periods = Object.groupBy(sequence.flights, (flight) => flight.period);
+  const lastPeriod = sequence.flights.reduce((last, current) => Math.max(last, current.period), 1);
 
   // Add flights
   for(const [period, flights] of Object.entries(periods)) {
@@ -19,7 +20,7 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
       children: [
         {
           type: 'preparation',
-          title: 'Prepare for Duty Period',
+          title: 'Prepare for Work',
           duration: tc.hours(1),
         },
         {
@@ -33,7 +34,7 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
           children: [
             {
               type: 'briefing',
-              title: 'Briefing',
+              title: 'Pre-Departure',
               duration: tc.hours(1),
             },
             {
@@ -52,7 +53,12 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
             }
           ],
           data: flight,
-        }))
+        })),
+        ...(Number(period) !== lastPeriod ? [{
+          type: 'transportation',
+          title: 'Transportation to Hotel',
+          duration: tc.hours(1.5),
+        }] : []),
       ],
       data: flights,
     });
@@ -64,6 +70,7 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
   bridge(schedule, 'duty-period', (a, b) => ({
     type: 'layover',
     title: `Layover in ${a.data.at(-1).destination.mun}`,
+    transparent: true,
   }));
 
   // Add circadian rhythm
@@ -72,7 +79,6 @@ export const createOptimizedRestSchedule = (sequence: Sequence, date: string, cr
     title: 'Circadian Sleep',
     transparent: true,
     start: new tc.DateTime(date, tc.local())
-      .sub(tc.days(1))
       .add(tc.hours(cr.bedtime)),
     end: schedule.at(-1)!.end,
     duration: tc.hours(cr.duration),

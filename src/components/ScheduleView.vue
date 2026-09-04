@@ -33,7 +33,7 @@ const { schedule, scale } = defineProps<{
   schedule: Schedule;
   scale: number;
   columns: string[][];
-  secondaryTz?: string;
+  secondaryTzEventType?: string;
   colors?: Record<string, string>;
 }>();
 
